@@ -110,5 +110,29 @@
   <script>
     
   </script>
+  <script>
+  const KEY_STORAGE = 'giphy_api_key';
+
+  function getApiKey() {
+    let key = localStorage.getItem(KEY_STORAGE);
+    if (!key) {
+      key = prompt('Enter your GIPHY API key (do NOT commit this key):');
+      if (key) localStorage.setItem(KEY_STORAGE, key.trim());
+    }
+    return key;
+  }
+
+  function ensureKeyOrWarn() {
+    const key = getApiKey();
+    if (!key) {
+      const statusEl = document.getElementById('status');
+      if (statusEl) statusEl.textContent = 'Missing API key. Please refresh and enter your key.';
+      return false;
+    }
+    return true;
+  }
+
+</script>
+
 </body>
 </html>
