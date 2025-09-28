@@ -110,6 +110,7 @@
   <script>
     
   </script>
+  
   <script>
   const KEY_STORAGE = 'giphy_api_key';
 
@@ -132,6 +133,93 @@
     return true;
   }
 
+</script>
+
+<script>
+  // --- Step 5: wire up form -> fetch -> render ---
+  const form = document.getElementById('searchForm');
+  const grid = document.getElementById('grid');
+  const statusEl = document.getElementById('status');
+  const empty = document.getElementById('empty');
+  const ratingEl = document.getElementById('rating');
+  const pagination = document.getElementById('pagination'); // placeholder for later
+  let offset = 0;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    offset = 0;
+    if (!ensureKeyOrWarn()) return;
+    search();
+  });
+
+  async function search() {
+    const API_KEY = getApiKey();
+    const q = document.getElementById('query').value.trim();
+    const rating = ratingEl.value;
+    const limit = 18;
+
+    if (!q) { statusEl.textContent = 'Please enter a search term.'; return; }
+
+    statusEl.textContent = 'Loading…';
+    empty.style.display = 'none';
+    grid.innerHTML = '';
+    pagination.innerHTML = '';
+
+    const url = new URL('https://api.giphy.com/v1/gifs/search');
+    url.searchParams.set('api_key', API_KEY);
+    url.searchParams.set('q', q);
+    url.searchParams.set('limit', limit);
+    url.searchParams.set('offset', offset);
+    url.searchParams.set('rating', rating);
+    url.searchParams.set('lang', 'en');
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Network error');
+      const json = await res.json();
+      renderResults(json, q);
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = 'Error fetching results. Check your API key or network.';
+    }
+  }
+
+  function renderResults(json, q) {
+    const items = json.data || [];
+    statusEl.textContent = items.length ? `Showing ${items.length} for "${q}"` : `No results for "${q}"`;
+
+    if (!items.length) {
+      empty.style.display = 'block';
+      empty.textContent = 'No results. Try different keywords or a lower rating.';
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    items.forEach(gif => {
+      const imgObj = gif.images?.fixed_width || gif.images?.downsized || gif.images?.original;
+      const url = imgObj?.url;
+
+      const card = document.createElement('article');
+      card.className = 'card';
+
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = url;
+      img.alt = gif.title || 'GIF';
+      card.appendChild(img);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const user = gif.username ? `@${gif.username}` : 'GIPHY';
+      const a = document.createElement('a');
+      a.href = gif.url; a.target = '_blank'; a.rel = 'noreferrer'; a.textContent = 'View';
+      meta.append(user, a);
+      card.appendChild(meta);
+
+      frag.appendChild(card);
+    });
+    grid.appendChild(frag);
+  }
 </script>
 
 </body>
