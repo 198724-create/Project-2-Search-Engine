@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <div id="loading" aria-hidden="true" hidden></div>
+  
   <style>
     #loading{width:22px;height:22px;border:3px solid #ddd;border-top-color:#444;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;margin:8px 0}
 @keyframes spin{to{transform:rotate(360deg)}}
+#loading[hidden]{ display:none !important; }
 
   body {
     margin: 0;
@@ -83,9 +84,11 @@
 <body>
   <header>
     <h1>Silly Kiki Finder</h1>
+    <div id="loading" aria-live="polite" role="status" hidden></div>
     <form id="searchForm">
       <input id="query" name="q" placeholder="Search GIFs…" autocomplete="off" />
       <button type="submit">Search</button>
+       <button type="button" id="clearBtn">Clear</button>
     </form>
     <div>
       <label>Rating
@@ -146,43 +149,48 @@
   const statusEl = document.getElementById('status');
   const empty = document.getElementById('empty');
   const ratingEl = document.getElementById('rating');
-  const pagination = document.getElementById('pagination'); // placeholder for later
+  const pagination = document.getElementById('pagination');
+  const loading = document.getElementById('loading');
+  function setLoading(on){ if (loading) loading.hidden = !on; }
+
   let offset = 0;
 
+  // Submit → run search
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     offset = 0;
-    // Clear button: reset UI and input
-const clearBtn = document.getElementById('clearBtn');
-clearBtn.addEventListener('click', () => {
-  // cancel any pending debounced search if you added one
-  try { if (typeof typeTimer !== 'undefined') clearTimeout(typeTimer); } catch {}
-
-  document.getElementById('query').value = '';
-  offset = 0;
-
-  grid.innerHTML = '';
-  pagination.innerHTML = '';
-  statusEl.textContent = '';
-  empty.style.display = 'block';
-  empty.textContent = 'Try a search to see results ✨';
-
-  // Put cursor back in the box
-  document.getElementById('query').focus();
-});
-
     if (!ensureKeyOrWarn()) return;
     search();
   });
+
+  // Clear button: reset UI and input
+  const clearBtn = document.getElementById('clearBtn');
+  if (clearBtn){
+    clearBtn.addEventListener('click', () => {
+      document.getElementById('query').value = '';
+      offset = 0;
+      grid.innerHTML = '';
+      pagination.innerHTML = '';
+      statusEl.textContent = '';
+      empty.style.display = 'block';
+      empty.textContent = 'Try a search to see results ✨';
+      document.getElementById('query').focus();
+    });
+  }
 
   async function search() {
     const API_KEY = getApiKey();
     const q = document.getElementById('query').value.trim();
     const rating = ratingEl.value;
-    const limit = 18;
+    const limit = Math.max(1, Math.min(50, parseInt(document.getElementById('limit')?.value || '18', 10)));
 
-    if (!q) { statusEl.textContent = 'Please enter a search term.'; return; }
+    if (!q) {
+      statusEl.textContent = 'Please enter a search term.';
+      setLoading(false);   // make sure spinner is off on early return
+      return;
+    }
 
+    setLoading(true);      // spinner ON during fetch
     statusEl.textContent = 'Loading…';
     empty.style.display = 'none';
     grid.innerHTML = '';
@@ -204,21 +212,20 @@ clearBtn.addEventListener('click', () => {
     } catch (err) {
       console.error(err);
       statusEl.textContent = 'Error fetching results. Check your API key or network.';
+      empty.style.display = 'block';
+      empty.textContent = 'No results to display.';
+    } finally {
+      setLoading(false);   // spinner ALWAYS OFF after attempt
     }
-    const loading = document.getElementById('loading');
-loading.hidden = false;
-try {
-  // ...fetch...
-} finally {
-  loading.hidden = true;
-}
-
   }
-
 
   function renderResults(json, q) {
     const items = json.data || [];
-    statusEl.textContent = items.length ? `Showing ${items.length} for "${q}"` : `No results for "${q}"`;
+    const p = json.pagination || {};
+
+    statusEl.textContent = items.length
+      ? `Showing ${items.length} for "${q}"`
+      : `No results for "${q}"`;
 
     if (!items.length) {
       empty.style.display = 'block';
@@ -239,7 +246,6 @@ try {
       img.src = url;
       img.alt = gif.title || 'GIF';
       card.appendChild(img);
-buildPagination(json.pagination);
 
       const meta = document.createElement('div');
       meta.className = 'meta';
@@ -252,34 +258,12 @@ buildPagination(json.pagination);
       frag.appendChild(card);
     });
     grid.appendChild(frag);
+
+    // Build pagination AFTER rendering
+    buildPagination(p);
   }
 </script>
-<script>
-  function buildPagination(p) {
-    const pagination = document.getElementById('pagination');
-    pagination.innerHTML = '';
-    if (!p || !p.count) return;
 
-    const prev = document.createElement('button');
-    prev.textContent = 'Prev';
-    prev.disabled = (p.offset <= 0);
-    prev.onclick = () => { offset = Math.max(0, p.offset - p.count); search(); };
-
-    const next = document.createElement('button');
-    next.textContent = 'Next';
-    const atEnd = (p.offset + p.count >= (p.total_count || 0));
-    next.disabled = atEnd;
-    next.onclick = () => { offset = p.offset + p.count; search(); };
-
-    const info = document.createElement('span');
-    const page = Math.floor(p.offset / p.count) + 1;
-    const pages = Math.max(1, Math.ceil((p.total_count || 0) / p.count));
-    info.style.padding = '6px 10px';
-    info.textContent = `Page ${page} / ${pages}`;
-
-    pagination.append(prev, info, next);
-  }
-</script>
 
 </body>
 </html>
