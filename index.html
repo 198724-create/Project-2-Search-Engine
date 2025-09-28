@@ -207,6 +207,7 @@
       img.src = url;
       img.alt = gif.title || 'GIF';
       card.appendChild(img);
+buildPagination(json.pagination);
 
       const meta = document.createElement('div');
       meta.className = 'meta';
@@ -219,6 +220,32 @@
       frag.appendChild(card);
     });
     grid.appendChild(frag);
+  }
+</script>
+<script>
+  function buildPagination(p) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    if (!p || !p.count) return;
+
+    const prev = document.createElement('button');
+    prev.textContent = 'Prev';
+    prev.disabled = (p.offset <= 0);
+    prev.onclick = () => { offset = Math.max(0, p.offset - p.count); search(); };
+
+    const next = document.createElement('button');
+    next.textContent = 'Next';
+    const atEnd = (p.offset + p.count >= (p.total_count || 0));
+    next.disabled = atEnd;
+    next.onclick = () => { offset = p.offset + p.count; search(); };
+
+    const info = document.createElement('span');
+    const page = Math.floor(p.offset / p.count) + 1;
+    const pages = Math.max(1, Math.ceil((p.total_count || 0) / p.count));
+    info.style.padding = '6px 10px';
+    info.textContent = `Page ${page} / ${pages}`;
+
+    pagination.append(prev, info, next);
   }
 </script>
 
