@@ -154,6 +154,15 @@
   function setLoading(on){ if (loading) loading.hidden = !on; }
 
   let offset = 0;
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const prevBtn = [...pagination.querySelectorAll('button')].find(b => b.textContent === 'Prev');
+    const nextBtn = [...pagination.querySelectorAll('button')].find(b => b.textContent === 'Next');
+    if (e.key === 'ArrowLeft' && prevBtn && !prevBtn.disabled) prevBtn.click();
+    if (e.key === 'ArrowRight' && nextBtn && !nextBtn.disabled) nextBtn.click();
+  });
+
 
 const PREFS_KEY = 'gif_prefs';
 function savePrefs(q, rating, limit){
