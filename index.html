@@ -144,6 +144,8 @@
 
 <script>
   // --- Step 5: wire up form -> fetch -> render ---
+  function scrollTopSmooth(){ window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
   const form = document.getElementById('searchForm');
   const grid = document.getElementById('grid');
   const statusEl = document.getElementById('status');
@@ -154,7 +156,7 @@
   function setLoading(on){ if (loading) loading.hidden = !on; }
 
   let offset = 0;
-  
+
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     const prevBtn = [...pagination.querySelectorAll('button')].find(b => b.textContent === 'Prev');
@@ -290,7 +292,8 @@ document.getElementById('limit').addEventListener('change', () => {
       const res = await fetch(url);
       if (!res.ok) throw new Error('Network error');
       const json = await res.json();
-      renderResults(json, q);
+      
+renderResults(json, q);
     } catch (err) {
       console.error(err);
       statusEl.textContent = 'Error fetching results. Check your API key or network.';
@@ -300,8 +303,9 @@ document.getElementById('limit').addEventListener('change', () => {
       setLoading(false);   // spinner ALWAYS OFF after attempt
     }
   }
-
+scrollTopSmooth();
   function renderResults(json, q) {
+    scrollTopSmooth();
     const items = json.data || [];
     const p = json.pagination || {};
 
@@ -343,6 +347,10 @@ document.getElementById('limit').addEventListener('change', () => {
 
     // Build pagination AFTER rendering
     buildPagination(p);
+    prev.onclick = () => { offset = Math.max(0, p.offset - p.count); search(); scrollTopSmooth(); };
+next.onclick = () => { offset = p.offset + p.count; search(); scrollTopSmooth(); };
+
+
   }
 </script>
 
