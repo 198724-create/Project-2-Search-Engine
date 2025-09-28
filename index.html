@@ -154,6 +154,14 @@
   function setLoading(on){ if (loading) loading.hidden = !on; }
 
   let offset = 0;
+  
+ratingEl.addEventListener('change', () => {
+  const q = document.getElementById('query').value.trim();
+  if (!q) return;
+  offset = 0;
+  if (!ensureKeyOrWarn()) return;
+  search();
+});
 
   // Submit → run search
   form.addEventListener('submit', (e) => {
@@ -177,6 +185,45 @@
       document.getElementById('query').focus();
     });
   }
+// Debounced search-as-you-type
+let typeTimer;
+document.getElementById('query').addEventListener('input', () => {
+  clearTimeout(typeTimer);
+  const q = document.getElementById('query').value.trim();
+  if (!q) return;            // don't call API on empty
+  typeTimer = setTimeout(() => {
+    offset = 0;
+    if (!ensureKeyOrWarn()) return;
+    search();
+  }, 400);
+});
+// Debounced search-as-you-type
+document.getElementById('query').addEventListener('input', () => {
+  clearTimeout(typeTimer);
+  const q = document.getElementById('query').value.trim();
+  if (!q) return; 
+  typeTimer = setTimeout(() => {
+    offset = 0;
+    if (!ensureKeyOrWarn()) return;
+    search();
+  }, 400);
+});
+// Auto-run search when rating changes
+ratingEl.addEventListener('change', () => {
+  const q = document.getElementById('query').value.trim();
+  if (!q) return;
+  offset = 0;
+  if (!ensureKeyOrWarn()) return;
+  search();
+});
+// Auto-run search when limit changes
+document.getElementById('limit').addEventListener('change', () => {
+  const q = document.getElementById('query').value.trim();
+  if (!q) return;
+  offset = 0;
+  if (!ensureKeyOrWarn()) return;
+  search();
+});
 
   async function search() {
     const API_KEY = getApiKey();
