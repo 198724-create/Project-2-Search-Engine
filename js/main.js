@@ -1,4 +1,6 @@
-// --- API key helpers (kept from your Step 4) ---
+
+console.log('main.js loaded');
+
 const KEY_STORAGE = 'giphy_api_key';
 function getApiKey(){
   let key = localStorage.getItem(KEY_STORAGE);

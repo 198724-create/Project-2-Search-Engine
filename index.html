@@ -1,340 +1,63 @@
 <!doctype html>
 <html lang="en">
 <head>
-  
-  <style>
-    #loading{width:22px;height:22px;border:3px solid #ddd;border-top-color:#444;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;margin:8px 0}
-@keyframes spin{to{transform:rotate(360deg)}}
-#loading[hidden]{ display:none !important; }
-
-  body {
-    margin: 0;
-    font-family: system-ui, Arial, sans-serif;
-    padding: 20px;
-  }
-
-  header, footer {
-    padding: 12px 0;
-    border-bottom: 1px solid #ddd;
-  }
-  footer {
-    border-top: 1px solid #ddd;
-    border-bottom: none;
-    margin-top: 20px;
-  }
-
-  #searchForm {
-    display: inline-flex;
-    gap: 8px;
-    margin: 8px 0;
-  }
-
-  main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 12px 0;
-  }
-
-  /* Custom responsive grid */
-  #grid {
-    display: grid;
-    gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    margin-top: 20px;
-  }
-
-  .card {
-    border: 1px solid #eee;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .card img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  .meta {
-    padding: 8px 10px;
-    font-size: 12px;
-    color: #555;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  #pagination {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-top: 20px;
-  }
-
-  @media (max-width: 600px) {
-    #grid {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-  }
-</style>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Silly Kiki Finder</title>
-</head>
-<body>
-  <header>
-    <h1>Silly Kiki Finder</h1>
-    <div id="loading" aria-live="polite" role="status" hidden></div>
-    <form id="searchForm">
-      <input id="query" name="q" placeholder="Search GIFs…" autocomplete="off" />
-      <button type="submit">Search</button>
-       <button type="button" id="clearBtn">Clear</button>
-    </form>
-    <div>
-      <label>Rating
-        <select id="rating">
-          <option value="g" selected>g</option>
-          <option value="pg">pg</option>
-          <option value="pg-13">pg-13</option>
-        </select>
-      </label>
-      <label>Limit
-        <input id="limit" type="number" min="1" max="50" value="18" />
-      </label>
-    </div>
-    <div id="status"></div>
-  </header>
 
-  <main>
-    <section id="grid" aria-live="polite"></section>
-    <div id="empty">Try a search to see results </div>
-  </main>
+  <!-- Google Font (requirement #7) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@700&display=swap" rel="stylesheet">
+
+  <!-- Site styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body id="top">
+<header>
+  <h1 class="site-title">Silly Kiki Finder</h1>
+  <div id="loading" aria-live="polite" role="status" hidden></div>
+
+  <form id="searchForm" role="search">
+    <input id="query" name="q" type="search" placeholder="Search GIFs…" autocomplete="off" />
+    <button type="submit">Search</button>
+    <button type="button" id="clearBtn" class="secondary">Clear</button>
+  </form>
+
+  <div class="controls">
+    <label>Rating
+      <select id="rating">
+        <option value="g" selected>g</option>
+        <option value="pg">pg</option>
+        <option value="pg-13">pg-13</option>
+      </select>
+    </label>
+    <label>Limit
+      <input id="limit" type="number" min="1" max="50" value="18" />
+    </label>
+  </div>
+
+  <div id="status" aria-live="polite"></div>
+</header>
+
+<main>
+  <section id="grid" aria-live="polite"></section>
+  <div id="empty">Try a search to see results ✨</div>
+</main>
+
 
   <footer>
     <div id="pagination"></div>
   </footer>
 
-  <script>
-    
-  </script>
-  
-  <script>
-  const KEY_STORAGE = 'giphy_api_key';
+  <!-- App script -->
+  <script src="js/main.js" defer></script>
+<footer>
+  <div id="pagination"></div>
+</footer>
 
-  function getApiKey() {
-    let key = localStorage.getItem(KEY_STORAGE);
-    if (!key) {
-      key = prompt('Enter your GIPHY API key (do NOT commit this key):');
-      if (key) localStorage.setItem(KEY_STORAGE, key.trim());
-    }
-    return key;
-  }
-
-  function ensureKeyOrWarn() {
-    const key = getApiKey();
-    if (!key) {
-      const statusEl = document.getElementById('status');
-      if (statusEl) statusEl.textContent = 'Missing API key. Please refresh and enter your key.';
-      return false;
-    }
-    return true;
-  }
-
-</script>
-
-<script>
-  // --- Step 5: wire up form -> fetch -> render ---
-
-  // smooth scroll helper
-  function scrollTopSmooth(){ window.scrollTo({ top: 0, behavior: 'smooth' }); }
-
-  // element grabs
-  const form = document.getElementById('searchForm');
-  const grid = document.getElementById('grid');
-  const statusEl = document.getElementById('status');
-  const empty = document.getElementById('empty');
-  const ratingEl = document.getElementById('rating');
-  const limitEl = document.getElementById('limit');
-  const pagination = document.getElementById('pagination');
-  const loading = document.getElementById('loading');
-  function setLoading(on){ if (loading) loading.hidden = !on; }
-
-  let offset = 0;
-  let typeTimer;
-
-  // persist prefs
-  const PREFS_KEY = 'gif_prefs';
-  function savePrefs(q, rating, limit){
-    localStorage.setItem(PREFS_KEY, JSON.stringify({ q, rating, limit }));
-  }
-  function loadPrefs(){
-    try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); }
-    catch { return {}; }
-  }
-
-  // restore prefs on load
-  document.addEventListener('DOMContentLoaded', () => {
-    const prefs = loadPrefs();
-    if (prefs.q) document.getElementById('query').value = prefs.q;
-    if (prefs.rating) ratingEl.value = prefs.rating;
-    if (prefs.limit) limitEl.value = prefs.limit;
-  });
-
-  // form submit -> search
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    offset = 0;
-    if (!ensureKeyOrWarn()) return;
-    search();
-  });
-
-  // clear button
-  const clearBtn = document.getElementById('clearBtn');
-  if (clearBtn){
-    clearBtn.addEventListener('click', () => {
-      document.getElementById('query').value = '';
-      offset = 0;
-      grid.innerHTML = '';
-      pagination.innerHTML = '';
-      statusEl.textContent = '';
-      empty.style.display = 'block';
-      empty.textContent = 'Try a search to see results ✨';
-      document.getElementById('query').focus();
-    });
-  }
-
-  // debounce search-as-you-type
-  document.getElementById('query').addEventListener('input', () => {
-    clearTimeout(typeTimer);
-    const q = document.getElementById('query').value.trim();
-    if (!q) return;
-    typeTimer = setTimeout(() => {
-      offset = 0;
-      if (!ensureKeyOrWarn()) return;
-      search();
-    }, 400);
-  });
-
-  // auto search on rating change
-  ratingEl.addEventListener('change', () => {
-    const q = document.getElementById('query').value.trim();
-    if (!q) return;
-    offset = 0;
-    if (!ensureKeyOrWarn()) return;
-    search();
-  });
-
-  // auto search on limit change
-  limitEl.addEventListener('change', () => {
-    const q = document.getElementById('query').value.trim();
-    if (!q) return;
-    offset = 0;
-    if (!ensureKeyOrWarn()) return;
-    search();
-  });
-
-  // keyboard pagination
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const prevBtn = [...pagination.querySelectorAll('button')].find(b => b.textContent === 'Prev');
-    const nextBtn = [...pagination.querySelectorAll('button')].find(b => b.textContent === 'Next');
-    if (e.key === 'ArrowLeft' && prevBtn && !prevBtn.disabled) prevBtn.click();
-    if (e.key === 'ArrowRight' && nextBtn && !nextBtn.disabled) nextBtn.click();
-  });
-
-  // main search
-  async function search(){
-    const API_KEY = getApiKey();
-    const q = document.getElementById('query').value.trim();
-    const rating = ratingEl.value;
-    const limit = Math.max(1, Math.min(50, parseInt(limitEl?.value || '18', 10)));
-
-    if (!q){
-      statusEl.textContent = 'Please enter a search term.';
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    statusEl.textContent = 'Loading…';
-    empty.style.display = 'none';
-    grid.innerHTML = '';
-    pagination.innerHTML = '';
-
-    const url = new URL('https://api.giphy.com/v1/gifs/search');
-    url.searchParams.set('api_key', API_KEY);
-    url.searchParams.set('q', q);
-    url.searchParams.set('limit', limit);
-    url.searchParams.set('offset', offset);
-    url.searchParams.set('rating', rating);
-    url.searchParams.set('lang', 'en');
-
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Network error');
-      const json = await res.json();
-      renderResults(json, q);
-      savePrefs(q, rating, limit);
-    } catch (err) {
-      console.error(err);
-      const offline = !navigator.onLine;
-      statusEl.textContent = offline
-        ? 'You appear to be offline. Check your connection and try again.'
-        : 'Error fetching results. Check your API key or try again.';
-      empty.style.display = 'block';
-      empty.textContent = 'No results to display.';
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // render + pagination
-  function renderResults(json, q){
-    scrollTopSmooth();
-
-    const items = json.data || [];
-    const p = json.pagination || {};
-
-    statusEl.textContent = items.length
-      ? `Showing ${items.length} for "${q}"`
-      : `No results for "${q}"`;
-
-    if (!items.length) {
-      empty.style.display = 'block';
-      empty.textContent = 'No results. Try different keywords or a lower rating.';
-      return;
-    }
-
-    const frag = document.createDocumentFragment();
-    items.forEach(gif => {
-      const imgObj = gif.images?.fixed_width || gif.images?.downsized || gif.images?.original;
-      const url = imgObj?.url;
-
-      const card = document.createElement('article');
-      card.className = 'card';
-
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.src = url;
-      img.alt = gif.title || 'GIF';
-      card.appendChild(img);
-
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      const user = gif.username ? `@${gif.username}` : 'GIPHY';
-      const a = document.createElement('a');
-      a.href = gif.url; a.target = '_blank'; a.rel = 'noreferrer'; a.textContent = 'View';
-      meta.append(user, a);
-      card.appendChild(meta);
-
-      frag.appendChild(card);
-    });
-    grid.appendChild(frag);
-
-    buildPagination(p);
-  }
-</script>
-
- 
+<!-- keep this exactly like this -->
+<script src="js/main.js" defer></script>
 </body>
+
 </html>
