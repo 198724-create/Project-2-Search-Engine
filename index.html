@@ -154,7 +154,16 @@
   function setLoading(on){ if (loading) loading.hidden = !on; }
 
   let offset = 0;
-  
+
+  document.getElementById('limit').addEventListener('change', () => {
+  const q = document.getElementById('query').value.trim();
+  if (!q) return;
+  offset = 0;
+  if (!ensureKeyOrWarn()) return;
+  search();
+});
+
+
 ratingEl.addEventListener('change', () => {
   const q = document.getElementById('query').value.trim();
   if (!q) return;
