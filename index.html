@@ -155,12 +155,29 @@
 
   let offset = 0;
 
+const PREFS_KEY = 'gif_prefs';
+function savePrefs(q, rating, limit){
+  localStorage.setItem(PREFS_KEY, JSON.stringify({ q, rating, limit }));
+}
+function loadPrefs(){
+  try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); }
+  catch { return {}; }
+}
+
   document.getElementById('limit').addEventListener('change', () => {
   const q = document.getElementById('query').value.trim();
   if (!q) return;
   offset = 0;
   if (!ensureKeyOrWarn()) return;
   search();
+  savePrefs(q, rating, limit);
+document.addEventListener('DOMContentLoaded', () => {
+  const prefs = loadPrefs();
+  if (prefs.q) document.getElementById('query').value = prefs.q;
+  if (prefs.rating) ratingEl.value = prefs.rating;
+  if (prefs.limit) document.getElementById('limit').value = prefs.limit;
+});
+
 });
 
 
