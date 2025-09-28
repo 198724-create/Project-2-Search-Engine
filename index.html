@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <style>
+  body {
+    margin: 0;
+    font-family: system-ui, Arial, sans-serif;
+    padding: 20px;
+  }
+
+  header, footer {
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+  }
+  footer {
+    border-top: 1px solid #ddd;
+    border-bottom: none;
+    margin-top: 20px;
+  }
+
+  #searchForm {
+    display: inline-flex;
+    gap: 8px;
+    margin: 8px 0;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 12px 0;
+  }
+
+  /* Custom responsive grid */
+  #grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    margin-top: 20px;
+  }
+
+  .card {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .card img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .meta {
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  #pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  @media (max-width: 600px) {
+    #grid {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+  }
+</style>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Silly Kiki Finder</title>
+</head>
+<body>
+  <header>
+    <h1>Silly Kiki Finder</h1>
+    <form id="searchForm">
+      <input id="query" name="q" placeholder="Search GIFs…" autocomplete="off" />
+      <button type="submit">Search</button>
+    </form>
+    <div>
+      <label>Rating
+        <select id="rating">
+          <option value="g" selected>g</option>
+          <option value="pg">pg</option>
+          <option value="pg-13">pg-13</option>
+        </select>
+      </label>
+      <label>Limit
+        <input id="limit" type="number" min="1" max="50" value="18" />
+      </label>
+    </div>
+    <div id="status"></div>
+  </header>
+
+  <main>
+    <section id="grid" aria-live="polite"></section>
+    <div id="empty">Try a search to see results </div>
+  </main>
+
+  <footer>
+    <div id="pagination"></div>
+  </footer>
+
+  <script>
+    
+  </script>
+</body>
+</html>
