@@ -1,7 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <div id="loading" aria-hidden="true" hidden></div>
   <style>
+    #loading{width:22px;height:22px;border:3px solid #ddd;border-top-color:#444;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;margin:8px 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
   body {
     margin: 0;
     font-family: system-ui, Arial, sans-serif;
@@ -148,6 +152,25 @@
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     offset = 0;
+    // Clear button: reset UI and input
+const clearBtn = document.getElementById('clearBtn');
+clearBtn.addEventListener('click', () => {
+  // cancel any pending debounced search if you added one
+  try { if (typeof typeTimer !== 'undefined') clearTimeout(typeTimer); } catch {}
+
+  document.getElementById('query').value = '';
+  offset = 0;
+
+  grid.innerHTML = '';
+  pagination.innerHTML = '';
+  statusEl.textContent = '';
+  empty.style.display = 'block';
+  empty.textContent = 'Try a search to see results ✨';
+
+  // Put cursor back in the box
+  document.getElementById('query').focus();
+});
+
     if (!ensureKeyOrWarn()) return;
     search();
   });
@@ -182,7 +205,16 @@
       console.error(err);
       statusEl.textContent = 'Error fetching results. Check your API key or network.';
     }
+    const loading = document.getElementById('loading');
+loading.hidden = false;
+try {
+  // ...fetch...
+} finally {
+  loading.hidden = true;
+}
+
   }
+
 
   function renderResults(json, q) {
     const items = json.data || [];
